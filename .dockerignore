@@ -1,0 +1,14 @@
+node_modules
+dist
+npm-debug.log
+pnpm-debug.log
+.git
+.env
+.dockerignore
+Dockerfile
+docker-compose.yml
+README.md
+IMPLEMENTATION_PLAN.md
+BACKEND_SPEC.md
+coverage
+test
