@@ -2,20 +2,45 @@ import { INestApplication } from '@nestjs/common';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+import { ApiExceptionFilter } from '../src/common/api-exception.filter';
+import { AppModule } from '../src/app.module';
+import { AuthService } from '../src/auth/auth.service';
+
+const base64Url = (value: string) => Buffer.from(value).toString('base64url');
+const createToken = async (sub: string, email: string, name: string) => {
+  const header = base64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = base64Url(JSON.stringify({
+    iss: 'https://api.workos.com',
+    aud: 'form-engine',
+    sub,
+    email,
+    name,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  }));
+  const input = `${header}.${payload}`;
+  const signature = createHmac('sha256', 'test-workos-secret').update(input).digest('base64url');
+  return `${input}.${signature}`;
+};
 
 describe('FormEngine API (e2e)', () => {
   let app: INestApplication;
+  let authHeader: string;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
+    process.env.NODE_ENV = 'test';
+    process.env.DATABASE_URL = 'pgmem';
+    process.env.WORKOS_JWT_SECRET = 'test-workos-secret';
+    const moduleFixture: TestingModule = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalFilters(new ApiExceptionFilter());
     await app.init();
+    authHeader = `Bearer ${await createToken('user_123', 'owner@example.com', 'Owner')}`;
+  });
+
+  afterEach(async () => {
+    await app.close();
   });
 
   afterEach(async () => {
