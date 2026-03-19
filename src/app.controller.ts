@@ -8,8 +8,6 @@ export class AppController {
       data: {
         service: 'FormEngine',
         status: 'ok',
-        storage: 'postgres-compatible',
-        auth: ['workos-jwt', 'api-key'],
       },
     };
   }

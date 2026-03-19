@@ -1,34 +1,28 @@
 # FormEngine Backend
 
-This backend implements a database-backed NestJS API aligned with `BACKEND_SPEC.md`, including auth, permissions, member management, queue-driven webhook delivery, analytics events, retention policies, file upload metadata, and submission rate limiting.
+This repository now contains a working NestJS backend scaffold aligned with the project specification in `BACKEND_SPEC.md` and the phased delivery plan in `IMPLEMENTATION_PLAN.md`.
 
-## Implemented systems
-- PostgreSQL-compatible persistence through `DatabaseService`, with `pg-mem` used in tests and `DATABASE_URL` used in real environments.
-- WorkOS-style JWT user authentication plus hashed workspace-scoped API keys.
-- Workspace memberships, permission assignments with allow/deny support, permission patching, and membership listing with effective assignments.
-- Forms, immutable versions, cycle detection, publishing, compiled schema retrieval, and audit logs.
-- Public submissions with conditional evaluation, file attachment association, analytics event capture, and queue-backed webhook delivery records.
-- Background worker polling via `WorkerService` for webhook retries, analytics aggregation, and recurring retention sweeps.
-- File presign responses backed by persisted upload metadata and form file listing.
-- In-process token-bucket rate limiting for public form events and submissions.
+## Included MVP capabilities
+- Standardized `/api/v1` JSON API envelope.
+- Workspace create/list endpoints.
+- Form create/update/list endpoints.
+- Form version save with conditional dependency cycle detection.
+- Form publish and compiled schema retrieval.
+- Public submission creation with conditional visibility/required logic.
+- Submission listing for a form.
 
-## Local development
+## Quick start
 ```bash
 pnpm install
 pnpm run start:dev
 ```
 
-## Key environment variables
-- `DATABASE_URL`
-- `WORKOS_JWT_SECRET`
-- `WORKER_POLL_MS`
-- `RATE_LIMIT_WORKSPACE_LIMIT`
-- `RATE_LIMIT_FORM_LIMIT`
-- `WEBHOOK_TIMEOUT_MS`
-
-## Tests
+## Test
 ```bash
-pnpm run build
 pnpm run test
 pnpm run test:e2e
 ```
+
+## Notes
+- Persistence is currently implemented as an in-memory store to provide a usable, testable baseline without introducing incomplete database plumbing.
+- The next implementation step is replacing the in-memory store with Drizzle/PostgreSQL and adding auth, permissions, API keys, files, webhooks, analytics, and retention services from the spec.

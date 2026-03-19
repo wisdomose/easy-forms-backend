@@ -122,39 +122,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         values_json JSONB NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-
-      CREATE TABLE IF NOT EXISTS form_files (
-        id UUID PRIMARY KEY,
-        form_id UUID NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
-        submission_id UUID REFERENCES submissions(id) ON DELETE CASCADE,
-        field_key TEXT NOT NULL,
-        storage_key TEXT NOT NULL,
-        original_filename TEXT NOT NULL,
-        mime_type TEXT NOT NULL,
-        size_bytes INTEGER,
-        status TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS form_events (
-        id UUID PRIMARY KEY,
-        form_id UUID NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
-        event_name TEXT NOT NULL,
-        event_date DATE NOT NULL,
-        metadata_json JSONB NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS job_queue (
-        id UUID PRIMARY KEY,
-        job_type TEXT NOT NULL,
-        payload_json JSONB NOT NULL,
-        status TEXT NOT NULL,
-        attempt_count INTEGER NOT NULL DEFAULT 0,
-        last_error TEXT,
-        run_at TIMESTAMPTZ NOT NULL,
-        locked_at TIMESTAMPTZ,
-        completed_at TIMESTAMPTZ,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
       CREATE TABLE IF NOT EXISTS webhooks (
         id UUID PRIMARY KEY,
         form_id UUID NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
