@@ -1,27 +1,28 @@
 # FormEngine Backend
 
-This backend now implements a database-backed NestJS API aligned with the repository specification in `BACKEND_SPEC.md`.
+This repository now contains a working NestJS backend scaffold aligned with the project specification in `BACKEND_SPEC.md` and the phased delivery plan in `IMPLEMENTATION_PLAN.md`.
 
-## Implemented systems
-- PostgreSQL-compatible persistence through a centralized `DatabaseService` with schema bootstrap and transactional writes.
-- WorkOS-style bearer token authentication for user sessions plus hashed API key authentication for server-to-server access.
-- Workspace membership and permission evaluation with allow/deny semantics.
-- Forms, immutable versions, conditional rule cycle detection, publishing, compiled schema retrieval, and public submission intake.
-- Webhook registration plus signed delivery records for `submission.created` events.
-- Retention policy endpoints, basic daily analytics aggregation, and R2-style upload presign responses.
-- Audit logging for workspace creation and key business actions persisted in the database.
+## Included MVP capabilities
+- Standardized `/api/v1` JSON API envelope.
+- Workspace create/list endpoints.
+- Form create/update/list endpoints.
+- Form version save with conditional dependency cycle detection.
+- Form publish and compiled schema retrieval.
+- Public submission creation with conditional visibility/required logic.
+- Submission listing for a form.
 
-## Local development
+## Quick start
 ```bash
 pnpm install
 pnpm run start:dev
 ```
 
-By default tests run against an in-memory PostgreSQL-compatible database (`pg-mem`). Set `DATABASE_URL` to a real PostgreSQL connection string for local or production environments.
-
-## Tests
+## Test
 ```bash
-pnpm run build
 pnpm run test
 pnpm run test:e2e
 ```
+
+## Notes
+- Persistence is currently implemented as an in-memory store to provide a usable, testable baseline without introducing incomplete database plumbing.
+- The next implementation step is replacing the in-memory store with Drizzle/PostgreSQL and adding auth, permissions, API keys, files, webhooks, analytics, and retention services from the spec.

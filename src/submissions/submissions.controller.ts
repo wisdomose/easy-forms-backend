@@ -1,19 +1,24 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
-import { AuthGuard, RequestWithAuth } from '../auth/auth.guard';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { SubmissionsService } from './submissions.service';
 
 @Controller()
 export class SubmissionsController {
-  constructor(private readonly service: SubmissionsService) {}
+  constructor(private readonly submissionsService: SubmissionsService) {}
 
-  @Post('f/:formId')
-  async create(@Param('formId') formId: string, @Body() body: Record<string, unknown>) {
-    return { data: await this.service.create(formId, body) };
+  @Post('f/:form_id')
+  createSubmission(
+    @Param('form_id') formId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return {
+      data: this.submissionsService.create(formId, body),
+    };
   }
 
   @Get('forms/:id/submissions')
-  @UseGuards(AuthGuard)
-  async list(@Req() req: RequestWithAuth, @Param('id') formId: string) {
-    return { data: await this.service.list(req.auth!, formId) };
+  listSubmissions(@Param('id') formId: string) {
+    return {
+      data: this.submissionsService.list(formId),
+    };
   }
 }

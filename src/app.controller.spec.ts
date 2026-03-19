@@ -5,18 +5,21 @@ describe('AppController', () => {
   let controller: AppController;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({ controllers: [AppController] }).compile();
-    controller = module.get(AppController);
+    const app: TestingModule = await Test.createTestingModule({
+      controllers: [AppController],
+    }).compile();
+
+    appController = app.get<AppController>(AppController);
   });
 
-  it('returns service metadata', () => {
-    expect(controller.getRoot()).toEqual({
-      data: {
-        service: 'FormEngine',
-        status: 'ok',
-        storage: 'postgres-compatible',
-        auth: ['workos-jwt', 'api-key'],
-      },
+  describe('root', () => {
+    it('should return service status metadata', () => {
+      expect(appController.getRoot()).toEqual({
+        data: {
+          service: 'FormEngine',
+          status: 'ok',
+        },
+      });
     });
   });
 });

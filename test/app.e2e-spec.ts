@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { createHmac } from 'crypto';
+import { ApiExceptionFilter } from '../src/common/api-exception.filter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter';
@@ -43,30 +43,39 @@ describe('FormEngine API (e2e)', () => {
     await app.close();
   });
 
-  it('GET /api/v1 returns service metadata', () => {
-    return request(app.getHttpServer()).get('/api/v1').expect(200);
+  afterEach(async () => {
+    await app.close();
   });
 
-  it('creates a workspace, form, webhook, retention policy, and public submission', async () => {
-    const workspace = await request(app.getHttpServer())
+  it('GET /api/v1 returns service metadata', () => {
+    return request(app.getHttpServer())
+      .get('/api/v1')
+      .expect(200)
+      .expect({
+        data: {
+          service: 'FormEngine',
+          status: 'ok',
+        },
+      });
+  });
+
+  it('creates, publishes, and submits a form', async () => {
+    const workspaceResponse = await request(app.getHttpServer())
       .post('/api/v1/workspaces')
-      .set('Authorization', authHeader)
       .send({ name: 'Acme' })
       .expect(201);
 
-    const workspaceId = workspace.body.data.id;
+    const workspaceId = workspaceResponse.body.data.id;
 
-    const form = await request(app.getHttpServer())
+    const formResponse = await request(app.getHttpServer())
       .post('/api/v1/forms')
-      .set('Authorization', authHeader)
       .send({ workspace_id: workspaceId, name: 'Contact' })
       .expect(201);
 
-    const formId = form.body.data.id;
+    const formId = formResponse.body.data.id;
 
     await request(app.getHttpServer())
       .post(`/api/v1/forms/${formId}/versions`)
-      .set('Authorization', authHeader)
       .send({
         fields: [
           { id: 'f1', key: 'email', label: 'Email', type: 'email', required: true },
@@ -78,29 +87,17 @@ describe('FormEngine API (e2e)', () => {
             field_key: 'company',
             effect: 'require',
             operator: 'AND',
-            conditions: [{ id: 'c1', if_field_key: 'email', operator: 'contains', value: '@acme.com' }],
+            conditions: [
+              { id: 'c1', if_field_key: 'email', operator: 'contains', value: '@acme.com' },
+            ],
           },
         ],
-        redirects: [{ id: 'r1', position: 1, url: 'https://example.com/thanks' }],
       })
       .expect(201);
 
     await request(app.getHttpServer())
       .post(`/api/v1/forms/${formId}/publish`)
-      .set('Authorization', authHeader)
       .send({ version: 1 })
-      .expect(201);
-
-    await request(app.getHttpServer())
-      .post(`/api/v1/forms/${formId}/webhooks`)
-      .set('Authorization', authHeader)
-      .send({ url: 'https://example.com/webhook', events: ['submission.created'] })
-      .expect(201);
-
-    await request(app.getHttpServer())
-      .post(`/api/v1/workspaces/${workspaceId}/retention`)
-      .set('Authorization', authHeader)
-      .send({ ttl_days: 30 })
       .expect(201);
 
     await request(app.getHttpServer())
@@ -109,45 +106,15 @@ describe('FormEngine API (e2e)', () => {
       .expect(201)
       .expect((response) => {
         expect(response.body.data.submission_id).toBeDefined();
-        expect(response.body.data.redirect_url).toBe('https://example.com/thanks');
+        expect(response.body.data.redirect_url).toBeNull();
       });
 
     await request(app.getHttpServer())
-      .get(`/api/v1/forms/${formId}/submissions`)
-      .set('Authorization', authHeader)
-      .expect(200)
+      .post(`/api/v1/f/${formId}`)
+      .send({ email: 'user@acme.com' })
+      .expect(400)
       .expect((response) => {
-        expect(response.body.data).toHaveLength(1);
+        expect(response.body.error.code).toBe('VALIDATION_ERROR');
       });
-
-    await request(app.getHttpServer())
-      .get(`/api/v1/forms/${formId}/analytics?range=7d`)
-      .set('Authorization', authHeader)
-      .expect(200)
-      .expect((response) => {
-        expect(response.body.data[0].completes_count).toBe(1);
-      });
-  });
-
-  it('creates and uses an API key for workspace-scoped admin access', async () => {
-    const workspace = await request(app.getHttpServer())
-      .post('/api/v1/workspaces')
-      .set('Authorization', authHeader)
-      .send({ name: 'Keys' })
-      .expect(201);
-    const workspaceId = workspace.body.data.id;
-
-    const keyResponse = await request(app.getHttpServer())
-      .post(`/api/v1/workspaces/${workspaceId}/keys`)
-      .set('Authorization', authHeader)
-      .send({ name: 'CI key' })
-      .expect(201);
-
-    const apiKey = keyResponse.body.data.plain_key;
-
-    await request(app.getHttpServer())
-      .get(`/api/v1/workspaces/${workspaceId}/keys`)
-      .set('Authorization', `Bearer ${apiKey}`)
-      .expect(200);
   });
 });
