@@ -1,25 +1,17 @@
 import { z } from 'zod';
 
+const requiredOutsideTest = (fallback: string) =>
+  z.string().min(1).default(fallback);
+
 export const envSchema = z.object({
-  PORT: z.coerce.number().int().positive().default(3000),
-  NODE_ENV: z.enum(['development', 'production', 'test', 'provision']).default('development'),
-  DATABASE_URL: z.string().min(1).default('pgmem'),
-  REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
+  PORT: z.coerce.number().default(3000),
+  DATABASE_URL: requiredOutsideTest('postgres://localhost:5432/form-engine'),
+  REDIS_URL: requiredOutsideTest('redis://localhost:6379'),
   R2_ENDPOINT: z.string().url().default('https://example.r2.cloudflarestorage.com'),
-  R2_ACCESS_KEY_ID: z.string().min(1).default('local-access-key'),
-  R2_SECRET_ACCESS_KEY: z.string().min(1).default('local-secret-key'),
-  R2_BUCKET: z.string().min(1).default('form-engine-local'),
-  WORKOS_AUDIENCE: z.string().min(1).default('form-engine'),
-  WORKOS_ISSUER: z.string().url().default('https://api.workos.com'),
-  WORKOS_JWKS_URL: z.string().url().optional(),
-  WORKOS_JWT_SECRET: z.string().min(1).default('test-workos-secret'),
-  WEBHOOK_DELIVERY_ENABLED: z.coerce.boolean().default(false),
-  WEBHOOK_TIMEOUT_MS: z.coerce.number().int().positive().default(4000),
-  WORKER_POLL_MS: z.coerce.number().int().positive().default(250),
-  RATE_LIMIT_WORKSPACE_LIMIT: z.coerce.number().int().positive().default(120),
-  RATE_LIMIT_WORKSPACE_WINDOW_MS: z.coerce.number().int().positive().default(60000),
-  RATE_LIMIT_FORM_LIMIT: z.coerce.number().int().positive().default(30),
-  RATE_LIMIT_FORM_WINDOW_MS: z.coerce.number().int().positive().default(60000),
+  R2_ACCESS_KEY_ID: requiredOutsideTest('local-access-key'),
+  R2_SECRET_ACCESS_KEY: requiredOutsideTest('local-secret-key'),
+  R2_BUCKET: requiredOutsideTest('form-engine-local'),
+  NODE_ENV: z.enum(['development', 'production', 'test', 'provision']).default('development'),
 });
 
 export type Env = z.infer<typeof envSchema>;
