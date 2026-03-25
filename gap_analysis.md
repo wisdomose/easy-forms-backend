@@ -131,7 +131,7 @@
 | `POST /api/v1/f/{form_id}` | ⚠️ Partial | [submissions.controller.ts](file:///c:/dev/agent%20sites/easy-forms/backend2/src/submissions/submissions.controller.ts) works but stores in **InMemoryStore**. URL path is `/f/:form_id` (correct) |
 | Conditional visibility/requirement | ✅ Done | Implemented in [submissions.service.ts](file:///c:/dev/agent%20sites/easy-forms/backend2/src/submissions/submissions.service.ts) |
 | Type casting/normalization | ⚠️ Partial | Basic [normalizeValue](file:///c:/dev/agent%20sites/easy-forms/backend2/src/submissions/submissions.service.ts#108-120) exists but doesn't handle all spec field types fully |
-| `submission_values` (typed scalar storage) | ❌ Missing | Table exists in DDL but no code writes to it — submissions use JSONB `values_json` |
+| `submission_values` (typed scalar storage) | ❌ Missing | Table does not exist in DDL or code — submissions use JSONB `values_json` in InMemoryStore |
 | `submission_multi_values` | ❌ Missing | Table defined in spec but not in DDL or code |
 | File metadata storage on submission | ❌ Missing | No file handling in submission flow |
 | Webhook delivery creation on submit | ❌ Missing | Submission pipeline doesn't create `webhook_deliveries` records |
@@ -260,7 +260,7 @@
 | **No Redis** | Rate limiting is per-process in-memory. Won't work with multiple instances |
 | **Auth guard not applied** | Admin endpoints (forms, workspaces) are effectively public |
 | **Duplicate import in main.ts** | `ApiExceptionFilter` is imported twice in [main.ts](file:///c:/dev/agent%20sites/easy-forms/backend2/src/main.ts#L2-L4) |
-| **No `api/v1` prefix on some routes** | Forms controller uses relative paths like `forms` — should verify all routes match spec URLs |
+| **`job_queue` table missing from bootstrap DDL** | Worker service references `job_queue` table for polling jobs, but the table is never created in `database.service.ts` bootstrap — will crash at runtime with real DB |
 | **Standard response format** | Some endpoints wrap in `{ data: ... }` but error format may not match spec's `{ error: { code, message, details } }` consistently |
 
 ---
