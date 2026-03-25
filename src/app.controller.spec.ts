@@ -1,22 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 describe('AppController', () => {
-  let appController: AppController;
+  let controller: AppController;
 
   beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
-    }).compile();
-
-    appController = app.get<AppController>(AppController);
+    const module: TestingModule = await Test.createTestingModule({ controllers: [AppController] }).compile();
+    controller = module.get(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  it('returns service metadata', () => {
+    expect(controller.getRoot()).toEqual({
+      data: {
+        service: 'FormEngine',
+        status: 'ok',
+        storage: 'postgres-compatible',
+        auth: ['workos-jwt', 'api-key'],
+      },
     });
   });
 });
