@@ -1,10 +1,10 @@
-import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { DatabaseService } from './database.service';
 
 @Injectable()
-export class WorkerService implements OnApplicationBootstrap, OnModuleDestroy {
+export class WorkerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WorkerService.name);
   private timer?: NodeJS.Timeout;
 
@@ -13,7 +13,7 @@ export class WorkerService implements OnApplicationBootstrap, OnModuleDestroy {
     private readonly config: ConfigService,
   ) {}
 
-  async onApplicationBootstrap() {
+  async onModuleInit() {
     await this.ensureRecurringJobs();
     const pollMs = this.config.get<number>('WORKER_POLL_MS', 250);
     this.timer = setInterval(() => {
